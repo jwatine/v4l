@@ -1,13 +1,18 @@
+
 #include <stdio.h>
-#include <sys/types.h>
 #include <fcntl.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <sys/ioctl.h>
 #include <linux/videodev2.h>
 #include <string.h>
 #include <errno.h>
 #include <termios.h>
+#include <SDL/SDL_image.h>
+#include <SDL/SDL.h>
+
+#include <sys/mman.h>
+#include <sys/ioctl.h>
+#include <sys/types.h>
 
 void v4l_capability(int fd){
   int N=100;
@@ -203,21 +208,178 @@ void close_fd(int fd){
   }
 }
 
+void set_video_format(int fd,  struct v4l2_format * format){
+  format->type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+  format->fmt.pix.pixelformat = V4L2_PIX_FMT_MJPEG;
+  format->fmt.pix.width = 800;
+  format->fmt.pix.height = 600;
+ 
+  if(ioctl(fd, VIDIOC_S_FMT, format) < 0){
+    perror("VIDIOC_S_FMT");
+    exit(1);
+  }
+}
 
-int main(void){
+/* inform the device about the future buffers */
+void buffers_initialization(int fd,struct v4l2_requestbuffers *  bufrequest){
+  bufrequest->type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+  bufrequest->memory = V4L2_MEMORY_MMAP;
+  bufrequest->count = 1;
+ 
+  if(ioctl(fd, VIDIOC_REQBUFS, bufrequest) < 0){
+    perror("VIDIOC_REQBUFS");
+    exit(1);
+  }
+}
 
-  int fd=open_fd();
+void mem_needed_device(int fd,  struct v4l2_buffer * bufferinfo){
+
+  memset(&bufferinfo, 0, sizeof(bufferinfo));
+ 
+  bufferinfo->type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+  bufferinfo->memory = V4L2_MEMORY_MMAP;
+  bufferinfo->index = 0;
+ 
+  if(ioctl(fd, VIDIOC_QUERYBUF, bufferinfo) < 0){
+    perror("VIDIOC_QUERYBUF");
+    exit(1);
+  }
+}
+
+void allocate_mem(int fd,  struct v4l2_buffer * bufferinfo,void ** buffer_start){
+  *buffer_start = mmap(
+		      NULL,
+		      bufferinfo->length,
+		      PROT_READ | PROT_WRITE,
+		      MAP_SHARED,
+		      fd,
+		      bufferinfo->m.offset
+		      );
   
-  struct v4l2_capability cap;
-  if(ioctl(fd, VIDIOC_QUERYCAP, &cap) < 0){
-    perror("VIDIOC_QUERYCAP");
+  if(*buffer_start == MAP_FAILED){
+    perror("mmap");
+    exit(1);
+  }
+  
+  memset(*buffer_start, 0, bufferinfo->length);
+}
+
+
+void stream(int fd,  struct v4l2_format format,void * buffer_start,  struct v4l2_buffer * bufferinfo){
+
+  
+  // Put the buffer in the incoming queue.
+  //if it doesn't work supress that call and reverse the dequeue and queue in the loop
+  if(ioctl(fd, VIDIOC_QBUF, bufferinfo) < 0){
+    perror("VIDIOC_QBUF");
+    exit(1);
+  }
+ 
+  // Activate streaming
+  int type = bufferinfo->type;
+  if(ioctl(fd, VIDIOC_STREAMON, &type) < 0){
+    perror("VIDIOC_STREAMON");
     exit(1);
   }
 
-  close_fd(fd);
+  int exit_prog=0;
+  while(!exit_prog){
+    // Dequeue the buffer.
+    if(ioctl(fd, VIDIOC_DQBUF, bufferinfo) < 0){
+      perror("VIDIOC_QBUF");
+      exit(1);
+    }
+ 
+    bufferinfo->type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    bufferinfo->memory = V4L2_MEMORY_MMAP;
+    /* Set the index if using several buffers */
+ 
+    // Queue the next one.
+    if(ioctl(fd, VIDIOC_QBUF, bufferinfo) < 0){
+      perror("VIDIOC_QBUF");
+      exit(1);
+    }
+    exit_prog=1;
+  }
+ 
+  // Deactivate streaming
+  if(ioctl(fd, VIDIOC_STREAMOFF, &type) < 0){
+    perror("VIDIOC_STREAMOFF");
+    exit(1);
+  }
+
+  // Initialise everything.
+  SDL_Init(SDL_INIT_VIDEO);
+  IMG_Init(IMG_INIT_JPG);
+ 
+  // Get the screen's surface.
+  SDL_Surface* screen = SDL_SetVideoMode(
+					 format.fmt.pix.width,
+					 format.fmt.pix.height,
+					 32, SDL_HWSURFACE
+					 );
+ 
+  SDL_RWops* buffer_stream;
+  SDL_Surface* frame;
+  SDL_Rect position = {.x = 0, .y = 0};
+ 
+  // Create a stream based on our buffer.
+  buffer_stream = SDL_RWFromMem(buffer_start, bufferinfo->length);
+ 
+  // Create a surface using the data coming out of the above stream.
+  frame = IMG_Load_RW(buffer_stream, 0);
+ 
+  // Blit the surface and flip the screen.
+  SDL_BlitSurface(frame, NULL, screen, &position);
+  SDL_Flip(screen);
+ 
+  // Free everything, and unload SDL & Co.
+  SDL_FreeSurface(frame);
+  SDL_RWclose(buffer_stream);
+  IMG_Quit();
+  SDL_Quit();
+
+
+
+}
+
+
+
+int main(void){
+
+
   
-  //Bash commands to know the formats supported by the device
-  //v4l2-ctl -d /dev/video0 --list-formats-ext
+  /* open the device, this function handles errors */
+  int fd=open_fd();
+
+  /* Bash commands to know the formats supported by the device */
+  /* v4l2-ctl -d /dev/video0 --list-formats-ext */  
+  /* the function should be adjusted for the type of device you're using */
+  struct v4l2_format format;
+  set_video_format(fd,&format);
+
+  /* inform the device about the buffer */
+  struct v4l2_requestbuffers  bufrequest;
+  buffers_initialization(fd, &bufrequest);
+
+  /* ask to the device the size of the buffer it needs */
+  struct v4l2_buffer  bufferinfo;
+  mem_needed_device(fd,&bufferinfo);
+
+
+  /*allocate memory to the buffer*/
+  /*declare a pointer that should point to the buffer's memory area */
+  void ** buffer_start;
+  allocate_mem(fd,&bufferinfo,buffer_start);
+
+  /* get a frame from the device and display it ( most important part ! )  */
+  stream(fd,format,*buffer_start,&bufferinfo);
+  
+  /* close the file descriptor */
+  close_fd(fd);
+
+
+  
   
   return EXIT_SUCCESS;
 }
