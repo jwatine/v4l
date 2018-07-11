@@ -1,6 +1,7 @@
 #include "camera_constantes.h"
 #include "camera_c/camera.h"
-
+#include <time.h>
+#include <stdlib.h>
 
 /*** First task : queue and dequeue the buffer ***/
 char *  input_queue_buff( char buffer[BUFF_SIZE]){
@@ -26,13 +27,23 @@ char *  input_queue_buff( char buffer[BUFF_SIZE]){
 }
 /*** second task : operation on buffers ***/
 char *  operation_buffer_data(char  buffer[BUFF_SIZE]){
-
-  int coefficient = 5;
-  int i;
-  for (i=0; i<bufferinfo.length;i++){
-    buffer[i]*=coefficient;
+ 
+  static int compteur =0 ;
+  int i,coeff;
+  if (compteur <15){
+    coeff =1;
+  }
+  else{
+    coeff=compteur;
   }
   
+  for (i=0; i<bufferinfo.length;i=i+2){
+    buffer[i]*=coeff;
+  }
+  if (compteur ==30){
+    compteur =0;
+  }
+  compteur ++;
   return buffer;
 }
 
@@ -49,7 +60,7 @@ void output_frame(char  buffer[BUFF_SIZE]){
  
 
   //display effectively the frame to the screen
-  if(!SDL_DisplayYUVOverlay(frame,&position)){
+  if(SDL_DisplayYUVOverlay(frame,&position)){
     perror("SDL_Display:");
     // exit(1);
   }

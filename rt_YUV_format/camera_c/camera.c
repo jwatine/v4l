@@ -22,12 +22,11 @@ int operation_buffer_data_6_fun(void* args)
 {
   char operation_buffer_data_6_fun_original_buff_locread[614400];
   char operation_buffer_data_6_fun_modified_buff_locwrite[614400];
-  memcpy(operation_buffer_data_6_fun_original_buff_locread,queue_buff_operation_buffer_data6_original_buff,sizeof(queue_buff_operation_buffer_data6_original_buff));
-  
+  memcpy(operation_buffer_data_6_fun_original_buff_locread,queue_buff_operation_buffer_data6_original_buff,614400);
   
   operation_buffer_data(operation_buffer_data_6_fun_original_buff_locread);
   
-  memcpy(operation_buffer_data6_modified_buff_frame,operation_buffer_data_6_fun_original_buff_locread,sizeof(operation_buffer_data_6_fun_modified_buff_locwrite));
+  memcpy(operation_buffer_data6_modified_buff_frame,operation_buffer_data_6_fun_original_buff_locread,sizeof(operation_buffer_data_6_fun_original_buff_locread));
   
   return 0;
 }
@@ -35,7 +34,7 @@ int operation_buffer_data_6_fun(void* args)
 int frame_0_fun(void* args)
 {
   char frame_0_fun_frame_locread[614400];
-  memcpy(frame_0_fun_frame_locread,operation_buffer_data6_modified_buff_frame,sizeof(operation_buffer_data6_modified_buff_frame));
+  memcpy(frame_0_fun_frame_locread,operation_buffer_data6_modified_buff_frame,614400);
   
   
   output_frame(frame_0_fun_frame_locread);
@@ -43,16 +42,16 @@ int frame_0_fun(void* args)
   return 0;
 }
 
-static int frame0_dwpat[1] = { 100 };
-static int operation_buffer_data6_dwpat[1] = { 80 };
-static int queue_buff0_dwpat[1] = { 60 };
+static int frame0_dwpat[1] = { 50 };
+static int operation_buffer_data6_dwpat[1] = { 40 };
+static int queue_buff0_dwpat[1] = { 30 };
 
 #define PLUD_TASK_NUMBER 3
 static struct encoded_task_params static_task_set[PLUD_TASK_NUMBER] = {
-  { "frame0", 100, 0, 20, { NULL, 0, frame0_dwpat, 1 }, frame_0_fun },
-  { "operation_buffer_data6", 100, 0, 20, { NULL, 0,
+  { "frame0", 50, 0, 10, { NULL, 0, frame0_dwpat, 1 }, frame_0_fun },
+  { "operation_buffer_data6", 50, 0, 10, { NULL, 0,
   operation_buffer_data6_dwpat, 1 }, operation_buffer_data_6_fun },
-  { "queue_buff0", 100, 0, 60, { NULL, 0, queue_buff0_dwpat, 1 },
+  { "queue_buff0", 50, 0, 20, { NULL, 0, queue_buff0_dwpat, 1 },
   queue_buff_0_fun }
 };
 

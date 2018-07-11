@@ -32,6 +32,8 @@
 #include "open_device.h"
 #include "camera_constantes.h"
 
+
+
 void task_body()
 {
   int task_index = ptask_get_index();
@@ -39,10 +41,14 @@ void task_body()
   struct dword_t task_dword = task_struct->e_t_dword;
   int job_dd_idx=0;
 
+  struct timespec tp;
+  long date_before_exec,date_after_exec,total_time;
+    
   while(1)
     {
       //printf("Executing task %s... \n",task_struct->e_t_name);
-
+      clock_gettime(CLOCK_REALTIME,&tp);
+      date_before_exec=tp.tv_nsec;
       ptime next_deadline;
       // call step function
       task_struct->e_t_body(NULL);
@@ -60,9 +66,15 @@ void task_body()
         }
       ptask_set_deadline(task_index, next_deadline, MILLI);
       //printf("...task %s done, next deadline = %d \n", task_struct->e_t_name, ptask_get_deadline(task_index, MILLI));
-      if (ptask_deadline_miss()){
-        printf("deadline miss : task %s \n",task_struct->e_t_name);
-      }
+
+      clock_gettime(CLOCK_REALTIME,&tp);
+      date_after_exec=tp.tv_nsec;
+      total_time=(date_after_exec-date_before_exec)/1000000;
+
+      /* if (ptask_deadline_miss()){ */
+      /*   printf("deadline miss : task %s , real time : %ld \n ",task_struct->e_t_name,total_time); */
+      /* } */
+
       
       ptask_wait_for_period();
     }

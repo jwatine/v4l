@@ -11,4 +11,4 @@ all:
 
 
 clean:
-	rm *~ 
+	rm -rf  *~ $(PROGRAM_NAME)
