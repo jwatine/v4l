@@ -7,7 +7,6 @@
 
 
 #define MILLISEC 0.001
-#define DEBUG
 
 
 

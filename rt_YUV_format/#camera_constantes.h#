@@ -8,7 +8,8 @@
 //device's file descriptor
 int fd;
 
-//that structure 
+//that structure contains information about the buffer
+//containing the data... The way the memory is mapped
 struct v4l2_buffer  bufferinfo;
 
 //format of the video, this should be set according to

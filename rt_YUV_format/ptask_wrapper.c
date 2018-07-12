@@ -34,13 +34,12 @@
 #include "open_device.h"
 #include "camera_constantes.h"
 
-#ifndef DEBUG
-#define DEBUG
-#endif
 
-#if _POSIX_C_SOURCE <= 199309L
-#error Version trop ancienne
-#endif 
+//some deadlines are still missed ...
+//to be continued....! 
+
+//define DEBUG
+
 
 void task_body()
 {
