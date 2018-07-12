@@ -46,4 +46,4 @@ $(PRELUDE_C_PROGRAM).c: $(PRELUDE_PROGRAM)
 	$(CC) -o $@ -c $< $(CFLAGS)
 
 clean:
-	rm -rf *.o *~ $(EXEC) $(PRELUDE_C_PROGRAM).o  $(PTASK_WRAPPER).o
+	rm -rf *.o *~ $(EXEC) $(PRELUDE_C_PROGRAM).*  $(PTASK_WRAPPER).o

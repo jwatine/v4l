@@ -25,6 +25,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
+#include <unistd.h>
 #include "ptask.h"
 #include "pbarrier.h"
 #include "encoded_task_params.h"
@@ -32,7 +34,13 @@
 #include "open_device.h"
 #include "camera_constantes.h"
 
+#ifndef DEBUG
+#define DEBUG
+#endif
 
+#if _POSIX_C_SOURCE <= 199309L
+#error Version trop ancienne
+#endif 
 
 void task_body()
 {
@@ -41,14 +49,24 @@ void task_body()
   struct dword_t task_dword = task_struct->e_t_dword;
   int job_dd_idx=0;
 
+#ifdef DEBUG
   struct timespec tp;
-  long date_before_exec,date_after_exec,total_time;
-    
+  double date_before_exec_ns,date_before_exec_s,date_after_exec_ns,date_after_exec_s;
+  double total_time,total_sec,total_nsec;
+#endif
   while(1)
     {
       //printf("Executing task %s... \n",task_struct->e_t_name);
-      clock_gettime(CLOCK_REALTIME,&tp);
-      date_before_exec=tp.tv_nsec;
+
+#ifdef DEBUG
+      if(!strcmp(task_struct->e_t_name,"queue_buff0")){
+	if(!clock_gettime(0,&tp)){
+	  perror("clock_gettime before ");
+	}
+	date_before_exec_ns=tp.tv_nsec;
+	date_before_exec_s=tp.tv_sec;
+      }
+#endif
       ptime next_deadline;
       // call step function
       task_struct->e_t_body(NULL);
@@ -66,15 +84,28 @@ void task_body()
         }
       ptask_set_deadline(task_index, next_deadline, MILLI);
       //printf("...task %s done, next deadline = %d \n", task_struct->e_t_name, ptask_get_deadline(task_index, MILLI));
+      
+#ifdef DEBUG
+      if(!strcmp(task_struct->e_t_name,"queue_buff0")){
+	if(!clock_gettime(0,&tp)){
+	  perror("clock_gettime after ");
+	}
+	date_after_exec_ns=tp.tv_nsec;
+	date_after_exec_s=tp.tv_sec;
+	
+	total_sec=date_after_exec_s-date_before_exec_s;
+	total_nsec=(date_after_exec_ns-date_before_exec_ns);
+	
+	total_time=total_sec*1000+total_nsec/1000000;
+      
+	if (ptask_deadline_miss()){
+	  printf("deadline miss : task %s , real time : %lf \n ",task_struct->e_t_name,total_time);
+	}
+	printf("...task %s done, next deadline = %d \n", task_struct->e_t_name, ptask_get_deadline(task_index, MILLI));
+	      
+      }
 
-      clock_gettime(CLOCK_REALTIME,&tp);
-      date_after_exec=tp.tv_nsec;
-      total_time=(date_after_exec-date_before_exec)/1000000;
-
-      /* if (ptask_deadline_miss()){ */
-      /*   printf("deadline miss : task %s , real time : %ld \n ",task_struct->e_t_name,total_time); */
-      /* } */
-
+#endif
       
       ptask_wait_for_period();
     }

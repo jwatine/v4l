@@ -6,8 +6,8 @@
 
 
 
-char *  input_queue_buff( char buffer[614400]);
-void  operation_buffer_data(char  buffer[614400]);
+void  input_queue_buff( char (*  buffer)[614400]);
+void  operation_buffer_data(char  buffer[614400],char (*buffer_out)[614400]);
 void output_frame(char  buffer[614400]);
 
 #endif

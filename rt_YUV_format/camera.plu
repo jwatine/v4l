@@ -1,12 +1,11 @@
-const tab = 1;
-imported node operation_buffer_data(original_buff : char [614400] ) returns (modified_buff : char [614400]) wcet 10;
+imported node operation_buffer_data(original_buff : char [614400] ) returns (modified_buff : char [614400]) wcet 15;
 
+sensor queue_buff wcet 30;
+actuator frame wcet 15;
 
-sensor queue_buff wcet 20;
-actuator frame wcet 10;
-
-node camera(queue_buff : char [614400] rate (50,0) ) returns (frame : rate(50,0))
+node camera(queue_buff : char [614400] rate (400,0) ) returns (frame : rate(80,0))
      		       
 let
-	frame=operation_buffer_data( queue_buff);
+  frame=operation_buffer_data(queue_buff*^5);
+  
 tel	

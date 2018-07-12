@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 /*** First task : queue and dequeue the buffer ***/
-void  input_queue_buff( char (* buffer)[BUFF_SIZE]){
+void  input_queue_buff( char buffer[BUFF_SIZE]){
   // Queue the buffer.
   if(ioctl(fd, VIDIOC_QBUF, &bufferinfo) < 0){
     perror("VIDIOC_QBUF");
@@ -19,22 +19,30 @@ void  input_queue_buff( char (* buffer)[BUFF_SIZE]){
   }
   
 
-  memcpy(*buffer,buffer_start,BUFF_SIZE);
+  memcpy(buffer,buffer_start,BUFF_SIZE);
 
     
 }
 /*** second task : operation on buffers ***/
 void  operation_buffer_data(char (  buffer_in)[BUFF_SIZE],char (*  buffer_out)[BUFF_SIZE]){
  
-  static int coeff =0 ;
-  int i;
-
-  for (i=0; i<bufferinfo.length;i=i+3){
-    buffer_in[i+1]+=coeff;
+  static int compteur =0 ;
+  int i,coeff;
+  if (compteur <25){
+    coeff =1;
   }
-
-  coeff ++;
+  else{
+    coeff=compteur;
+  }
   
+  for (i=0; i<bufferinfo.length;i=i+2){
+    (*buffer_in)[i]*=coeff;
+  }
+  if (compteur ==50){
+    compteur =0;
+  }
+  compteur ++;
+
   memcpy(*buffer_out,buffer_in,BUFF_SIZE);
   
   

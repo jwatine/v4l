@@ -2,8 +2,8 @@
 #include "camera.h"
 #include "camera_includes.h"
 
-char queue_buff_operation_buffer_data6_original_buff[614400];
-char operation_buffer_data6_modified_buff_frame[614400];
+char operation_buffer_data8_modified_buff_frame[614400];
+char queue_buff_operation_buffer_data8_original_buff[614400];
 
 
 int queue_buff_0_fun(void* args)
@@ -11,22 +11,9 @@ int queue_buff_0_fun(void* args)
   char queue_buff_0_fun_queue_buff_locwrite[614400];
   
   
-  input_queue_buff(queue_buff_0_fun_queue_buff_locwrite);
+  input_queue_buff(&queue_buff_0_fun_queue_buff_locwrite);
   
-  memcpy(queue_buff_operation_buffer_data6_original_buff,queue_buff_0_fun_queue_buff_locwrite,sizeof(queue_buff_0_fun_queue_buff_locwrite));
-  
-  return 0;
-}
-
-int operation_buffer_data_6_fun(void* args)
-{
-  char operation_buffer_data_6_fun_original_buff_locread[614400];
-  char operation_buffer_data_6_fun_modified_buff_locwrite[614400];
-  memcpy(operation_buffer_data_6_fun_original_buff_locread,queue_buff_operation_buffer_data6_original_buff,614400);
-  
-  operation_buffer_data(operation_buffer_data_6_fun_original_buff_locread);
-  
-  memcpy(operation_buffer_data6_modified_buff_frame,operation_buffer_data_6_fun_original_buff_locread,sizeof(operation_buffer_data_6_fun_original_buff_locread));
+  memcpy(queue_buff_operation_buffer_data8_original_buff,queue_buff_0_fun_queue_buff_locwrite,sizeof(queue_buff_0_fun_queue_buff_locwrite));
   
   return 0;
 }
@@ -34,7 +21,7 @@ int operation_buffer_data_6_fun(void* args)
 int frame_0_fun(void* args)
 {
   char frame_0_fun_frame_locread[614400];
-  memcpy(frame_0_fun_frame_locread,operation_buffer_data6_modified_buff_frame,614400);
+  memcpy(frame_0_fun_frame_locread,operation_buffer_data8_modified_buff_frame,sizeof(operation_buffer_data8_modified_buff_frame));
   
   
   output_frame(frame_0_fun_frame_locread);
@@ -42,16 +29,35 @@ int frame_0_fun(void* args)
   return 0;
 }
 
-static int frame0_dwpat[1] = { 50 };
-static int operation_buffer_data6_dwpat[1] = { 40 };
-static int queue_buff0_dwpat[1] = { 30 };
+int operation_buffer_data_8_fun(void* args)
+{
+  char operation_buffer_data_8_fun_original_buff_locread[614400];
+  char operation_buffer_data_8_fun_modified_buff_locwrite[614400];
+  static int instance=0;
+  
+  memcpy(operation_buffer_data_8_fun_original_buff_locread,queue_buff_operation_buffer_data8_original_buff,sizeof(queue_buff_operation_buffer_data8_original_buff));
+  
+  
+  operation_buffer_data(operation_buffer_data_8_fun_original_buff_locread,&operation_buffer_data_8_fun_modified_buff_locwrite);
+  
+  memcpy(operation_buffer_data8_modified_buff_frame,operation_buffer_data_8_fun_modified_buff_locwrite,sizeof(operation_buffer_data_8_fun_modified_buff_locwrite));
+  
+  
+  instance++;
+  
+  return 0;
+}
+
+static int operation_buffer_data8_dwpat[1] = { 65 };
+static int frame0_dwpat[1] = { 80 };
+static int queue_buff0_dwpat[1] = { 50 };
 
 #define PLUD_TASK_NUMBER 3
 static struct encoded_task_params static_task_set[PLUD_TASK_NUMBER] = {
-  { "frame0", 50, 0, 10, { NULL, 0, frame0_dwpat, 1 }, frame_0_fun },
-  { "operation_buffer_data6", 50, 0, 10, { NULL, 0,
-  operation_buffer_data6_dwpat, 1 }, operation_buffer_data_6_fun },
-  { "queue_buff0", 50, 0, 20, { NULL, 0, queue_buff0_dwpat, 1 },
+  { "operation_buffer_data8", 80, 0, 15, { NULL, 0,
+  operation_buffer_data8_dwpat, 1 }, operation_buffer_data_8_fun },
+  { "frame0", 80, 0, 15, { NULL, 0, frame0_dwpat, 1 }, frame_0_fun },
+  { "queue_buff0", 400, 0, 30, { NULL, 0, queue_buff0_dwpat, 1 },
   queue_buff_0_fun }
 };
 
@@ -63,9 +69,9 @@ void get_task_set (int* task_number, struct encoded_task_params** task_set)
 
 #define PLUD_COM_NUMBER 2
 static struct com_t static_com_set[PLUD_COM_NUMBER] = {
-  { "operation_buffer_data6", "modified_buff", "frame0", "frame", NULL, NULL,
+  { "operation_buffer_data8", "modified_buff", "frame0", "frame", NULL, NULL,
   1 },
-  { "queue_buff0", "queue_buff", "operation_buffer_data6", "original_buff",
+  { "queue_buff0", "queue_buff", "operation_buffer_data8", "original_buff",
   NULL, NULL, 1 }
 };
 
