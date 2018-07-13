@@ -23,17 +23,19 @@ void  input_queue_buff( char (* buffer)[BUFF_SIZE]){
 
     
 }
+
+
 /*** second task : operation on buffers ***/
 void  operation_buffer_data(char (  buffer_in)[BUFF_SIZE],char (*  buffer_out)[BUFF_SIZE]){
  
-  static int coeff =0 ;
+  static int coeff =0;
   int i;
 
-  for (i=0; i<bufferinfo.length;i=i+3){
-    buffer_in[i+1]+=coeff;
+  for (i=0; i<bufferinfo.length;i++){
+    buffer_in[i]+=coeff;
   }
 
-  coeff ++;
+  coeff =coeff+2;
   
   memcpy(*buffer_out,buffer_in,BUFF_SIZE);
   

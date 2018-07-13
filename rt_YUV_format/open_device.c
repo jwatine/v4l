@@ -12,9 +12,12 @@
 
 
 void  open_fd(){
-  //Open video0 in both read and write modes.
+  char path[100];
+  
+  printf("Enter the device's path (usually : /dev/video0)\n");
+  scanf("%s",path);
   //device's name should be adjusted.
-  if((fd = open("/dev/video0", O_RDWR)) < 0){
+  if((fd = open(path, O_RDWR)) < 0){
     perror("open");
     exit(1);
   }
@@ -28,6 +31,8 @@ void close_fd(int * fd){
   }
 }
 
+/* set video format, this should be adjusted depending on */
+/* the device capabilities*/
 void set_video_format(){
   format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
   format.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
@@ -99,16 +104,14 @@ void init_stream(SDL_Overlay ** frame, SDL_Rect * position, SDL_Surface ** scree
   // Initialise everything.
   SDL_Init(SDL_INIT_VIDEO);
 
-  printf("before setvideo \n");
-  // Get the screen's surface.
+   // Get the screen's surface.
   *screen = SDL_SetVideoMode(
 			     format.fmt.pix.width,
 			     format.fmt.pix.height,
 			     32,
 			     SDL_HWSURFACE);
 
-  printf("after setvideo \n");
-
+ 
      
   // Activate streaming
   int type = bufferinfo.type;
@@ -118,19 +121,18 @@ void init_stream(SDL_Overlay ** frame, SDL_Rect * position, SDL_Surface ** scree
   }
 
   //create an YUV overlay and the rect that "contains" the frame
+  //with its localisation on the window ...
   position->x=0;
   position->y=0;
   position->w=format.fmt.pix.width;
   position->h=format.fmt.pix.height;
   
 
-  printf("before create \n");
-  *frame = SDL_CreateYUVOverlay(format.fmt.pix.width,
+   *frame = SDL_CreateYUVOverlay(format.fmt.pix.width,
 			       format.fmt.pix.height,
 			       SDL_YUY2_OVERLAY,
 			       *screen);
-  printf("after create \n");
-
+ 
 
 
 
@@ -144,11 +146,14 @@ void handler_signal(int sig){
     exit(1);
   }
   
-
   // Free everything, and unload SDL.
   SDL_FreeYUVOverlay(frame);
   SDL_Quit();
+
+  close_fd(&fd);
   deallocate_mem( &buffer_start,& bufferinfo);
+
+
   exit(1);
 }
 
