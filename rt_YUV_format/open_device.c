@@ -14,7 +14,7 @@
 void  open_fd(){
   //Open video0 in both read and write modes.
   //device's name should be adjusted.
-  if((fd = open("/dev/video1", O_RDWR)) < 0){
+  if((fd = open("/dev/video0", O_RDWR)) < 0){
     perror("open");
     exit(1);
   }

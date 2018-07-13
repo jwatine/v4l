@@ -3,8 +3,8 @@
 # Note: for correct execution privileges, run 'echo -1 > /proc/sys/kernel/sched_rt_runtime_us'
 
 # modify these 2 folders depending on your installation
-PTASK_SOURCE_FOLDER=/home/jb/ptask
-PRELUDE_FOLDER=/home/jb/Prelude/trunk
+PTASK_SOURCE_FOLDER=/home/jwatine/ptask
+PRELUDE_FOLDER=/home/jwatine/Prelude/trunk
 
 PRELUDE_BIN_FOLDER=$(PRELUDE_FOLDER)/bin
 PRELUDE_SHARE_FOLDER=$(PRELUDE_FOLDER)/share
